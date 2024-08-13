@@ -12,6 +12,7 @@ import {
   useOnProgressChange,
 } from '../hook';
 import { CTX } from '../store';
+import { INITIAL_INDEX } from '../constant';
 
 const Carousel = React.forwardRef<ICarouselInstance, TCarouselProps>(
   (_props, ref) => {
@@ -30,8 +31,8 @@ const Carousel = React.forwardRef<ICarouselInstance, TCarouselProps>(
       onProgressChange,
     } = props;
 
-    const scrollX = useSharedValue(0);
-    const currentIndex = useSharedValue(0);
+    const scrollX = useSharedValue(-size * INITIAL_INDEX);
+    const currentIndex = useSharedValue(INITIAL_INDEX);
 
     const carouselController = useCarouselController({
       duration: scrollAnimationDuration,
@@ -42,8 +43,7 @@ const Carousel = React.forwardRef<ICarouselInstance, TCarouselProps>(
       loop,
       scrollOffsetAdjustment,
       onScrollEnd: () => runOnJS(onScrollCarouselEnd)(),
-      onScrollStart: () =>
-        !!onScrollStart && runOnJS(onScrollStart)(),
+      onScrollStart: () => !!onScrollStart && runOnJS(onScrollStart)(),
     });
 
     const { next, prev, scrollTo } = carouselController;
@@ -67,12 +67,11 @@ const Carousel = React.forwardRef<ICarouselInstance, TCarouselProps>(
       [currentIndex.value, next, prev, scrollTo],
     );
 
-    const { start: startAutoPlay, pause: pauseAutoPlay } =
-      useAutoPlay({
-        autoPlay,
-        autoPlayInterval,
-        carouselController,
-      });
+    const { start: startAutoPlay, pause: pauseAutoPlay } = useAutoPlay({
+      autoPlay,
+      autoPlayInterval,
+      carouselController,
+    });
 
     const onScrollCarouselEnd = React.useCallback(() => {
       //callback 2 times, 1st time is animation end, 2nd time is pangesture end
@@ -89,15 +88,13 @@ const Carousel = React.forwardRef<ICarouselInstance, TCarouselProps>(
       onScrollCarouselEnd();
     }, [onScrollCarouselEnd, startAutoPlay]);
 
-    const scrollViewGestureOnTouchBegin = React.useCallback(
+    const scrollViewGestureOnTouchBegin = React.useCallback(pauseAutoPlay, [
       pauseAutoPlay,
-      [pauseAutoPlay],
-    );
+    ]);
 
-    const scrollViewGestureOnTouchEnd = React.useCallback(
+    const scrollViewGestureOnTouchEnd = React.useCallback(startAutoPlay, [
       startAutoPlay,
-      [startAutoPlay],
-    );
+    ]);
 
     return (
       <GestureHandlerRootView>

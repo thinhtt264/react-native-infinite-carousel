@@ -1,9 +1,6 @@
-import { StyleProp, ViewStyle } from 'react-native';
+import { Platform, StyleProp, ViewStyle } from 'react-native';
 import React from 'react';
-import {
-  Gesture,
-  GestureDetector,
-} from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
   SharedValue,
@@ -11,6 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { CTX } from '../store';
 import { useCarouselController } from '../hook';
+import { MIN_DISTANCE } from '../constant';
 
 interface Props {
   children: React.ReactNode;
@@ -27,16 +25,10 @@ interface Props {
 
 const GestureScrollView = (props: Props) => {
   const {
-    props: {
-      dataLength,
-      size,
-      velocityThreshold,
-      scrollOffsetAdjustment,
-    },
+    props: { dataLength, size, velocityThreshold, scrollOffsetAdjustment },
   } = React.useContext(CTX);
 
   const {
-    transitionX,
     currentIndex,
     style,
     onScrollStart,
@@ -45,6 +37,7 @@ const GestureScrollView = (props: Props) => {
     onTouchEnd,
     carouselController,
     children,
+    transitionX,
   } = props;
 
   const {
@@ -57,9 +50,7 @@ const GestureScrollView = (props: Props) => {
     .onChange(e => {
       const { translationX } = e;
       const nextX =
-        currentIndex.value * -size +
-        translationX +
-        scrollOffsetAdjustment;
+        currentIndex.value * -size + translationX + scrollOffsetAdjustment;
 
       const maxOffsetX = (dataLength - 1) * size;
 
@@ -88,7 +79,7 @@ const GestureScrollView = (props: Props) => {
 
       if (shouldChangeIndex) {
         if (draggedDistance < 0 && isLastIndex) {
-          scrollNext();
+          scrollNext({ isDragging: true });
         } else if (draggedDistance > 0) {
           scrollPrev();
         } else {
@@ -112,17 +103,22 @@ const GestureScrollView = (props: Props) => {
       onScrollEnd && runOnJS(onScrollEnd)();
     });
 
+  gesture.minDistance(MIN_DISTANCE);
+
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [{ translateX: transitionX.value }],
     };
-  }, [transitionX.value]);
+  });
 
   return (
     <GestureDetector gesture={gesture}>
       <Animated.View
         style={[style, animatedStyle]}
         onTouchStart={onTouchBegin}
+        onTouchCancel={
+          Platform.OS === 'android' ? onTouchEnd : undefined // Android does not trigger onTouchEnd when not enough min distance
+        }
         onTouchEnd={onTouchEnd}>
         {children}
       </Animated.View>

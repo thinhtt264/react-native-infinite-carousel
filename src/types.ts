@@ -92,4 +92,5 @@ export interface TCarouselActionOptions {
   animated?: boolean;
   offsetAdjust?: number; // offset Adjustment
   onFinished?: () => void;
+  isDragging?: boolean;
 }

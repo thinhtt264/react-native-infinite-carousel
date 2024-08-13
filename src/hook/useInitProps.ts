@@ -1,6 +1,6 @@
 import React from 'react';
 import { TCarouselProps } from '../types';
-import { copyNToEnd } from '../utils';
+import { rotateAndDuplicate } from '../utils';
 import { SCREEN_WIDTH } from '../constant';
 
 export interface TInitializeCarouselProps extends TCarouselProps {
@@ -11,9 +11,7 @@ export interface TInitializeCarouselProps extends TCarouselProps {
   velocityThreshold: number;
   scrollOffsetAdjustment: number;
 }
-export function useInitProps(
-  props: TCarouselProps,
-): TInitializeCarouselProps {
+export function useInitProps(props: TCarouselProps): TInitializeCarouselProps {
   const {
     data: originalData,
     itemSize: size = SCREEN_WIDTH,
@@ -27,7 +25,7 @@ export function useInitProps(
   const isFullSize = size >= SCREEN_WIDTH;
 
   const data = React.useMemo(() => {
-    return loop ? copyNToEnd(originalData, isFullSize) : originalData;
+    return loop ? rotateAndDuplicate(originalData, isFullSize) : originalData;
   }, [isFullSize, loop, originalData]);
 
   return {

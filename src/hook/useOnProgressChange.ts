@@ -4,26 +4,33 @@ import {
   useAnimatedReaction,
 } from 'react-native-reanimated';
 import { TCarouselProps } from '../types';
+import { calculateOffsetForRealIndex } from '../utils';
 
 export function useOnProgressChange(
   opts: {
     size: number;
     offsetX: SharedValue<number>;
+    loop?: boolean;
   } & Pick<TCarouselProps, 'onProgressChange'>,
 ) {
-  const { offsetX, size, onProgressChange } = opts;
+  const { offsetX, size, onProgressChange, loop } = opts;
 
   useAnimatedReaction(
     () => offsetX.value,
-    _value => {
+    currentOffset => {
       if (!onProgressChange) return;
 
-      const index = Math.abs(Math.round(_value / size));
-      const value = Math.abs(_value);
+      const currentIndex = Math.abs(Math.round(currentOffset / size));
 
-      if (typeof onProgressChange === 'function')
-        runOnJS(onProgressChange)(value, index);
-      else onProgressChange.value = value;
+      const progressValue = loop
+        ? calculateOffsetForRealIndex(Math.abs(currentOffset), size)
+        : Math.abs(currentOffset);
+
+      if (typeof onProgressChange === 'function') {
+        runOnJS(onProgressChange)(progressValue, currentIndex);
+      } else {
+        onProgressChange.value = progressValue;
+      }
     },
     [onProgressChange],
   );

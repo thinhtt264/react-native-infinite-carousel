@@ -12,6 +12,7 @@ import {
   WithTimingAnimation,
 } from '../types';
 import { dealWithAnimation } from '../utils';
+import { INITIAL_INDEX } from '../constant';
 
 export interface ICarouselController {
   prev: (opts?: TCarouselActionOptions) => void;
@@ -33,9 +34,7 @@ interface IOpts {
   onScrollEnd?: () => void;
 }
 
-export const useCarouselController = (
-  options: IOpts,
-): ICarouselController => {
+export const useCarouselController = (options: IOpts): ICarouselController => {
   const {
     withAnimation,
     duration = 300, //bug animation when duration is undefined or too small
@@ -45,14 +44,22 @@ export const useCarouselController = (
     loop,
     size,
     scrollOffsetAdjustment,
-    onScrollEnd,
   } = options;
 
+  const finalLoop = originalData.length > 1 ? loop : false;
   const finishedAnimtion = useSharedValue(false);
+
+  const onScrollEnd = React.useCallback(() => {
+    options.onScrollEnd?.();
+  }, [options]);
+
+  const onScrollStart = React.useCallback(() => {
+    options.onScrollStart?.();
+  }, [options]);
 
   const getRealLastItemIndex = React.useCallback(() => {
     'worklet';
-    return originalData.length;
+    return originalData.length + INITIAL_INDEX;
   }, [originalData]);
 
   const scrollWithTiming = React.useCallback(
@@ -63,7 +70,7 @@ export const useCarouselController = (
         'worklet';
         if (isFinished) {
           finishedAnimtion.value = true;
-          onScrollEnd && runOnJS(onScrollEnd)();
+          runOnJS(onScrollEnd)();
           onFinished && runOnJS(onFinished)();
         }
       };
@@ -83,19 +90,20 @@ export const useCarouselController = (
 
   useAnimatedReaction(
     () => {
-      return finishedAnimtion.value;
+      return { finished: finishedAnimtion.value, index: currentIndex.value };
     },
-    finished => {
-      if (
-        loop &&
-        currentIndex.value === getRealLastItemIndex() &&
-        finished
-      ) {
-        currentIndex.value = 0;
-        handlerOffset.value = 0;
+    ({ finished, index }) => {
+      if (finalLoop && finished) {
+        if (index >= getRealLastItemIndex()) {
+          currentIndex.value = INITIAL_INDEX;
+          handlerOffset.value = -size * INITIAL_INDEX;
+        } else if (index <= 1) {
+          currentIndex.value = getRealLastItemIndex() - 1;
+          handlerOffset.value = -size * (getRealLastItemIndex() - 1);
+        }
       }
     },
-    [loop],
+    [finalLoop],
   );
 
   const next = React.useCallback(
@@ -105,21 +113,21 @@ export const useCarouselController = (
         animated = true,
         offsetAdjust = scrollOffsetAdjustment,
         onFinished,
+        isDragging = false,
       } = otps;
-      const nextIndex = loop
+      !isDragging && runOnJS(onScrollStart)?.();
+
+      const nextIndex = finalLoop
         ? currentIndex.value + 1
         : (currentIndex.value + 1) % originalData.length;
 
       const targetOffset = -nextIndex * size + offsetAdjust;
 
       if (animated) {
-        handlerOffset.value = scrollWithTiming(
-          targetOffset,
-          onFinished,
-        );
+        handlerOffset.value = scrollWithTiming(targetOffset, onFinished);
       } else {
         handlerOffset.value = targetOffset;
-        onFinished?.();
+        onFinished && runOnJS(onFinished)();
       }
 
       currentIndex.value = nextIndex;
@@ -135,18 +143,15 @@ export const useCarouselController = (
         offsetAdjust = scrollOffsetAdjustment,
         onFinished,
       } = opts;
-      if (currentIndex.value === 0 && handlerOffset.value >= 0)
-        return;
+      if (currentIndex.value === 0 && handlerOffset.value >= 0) return;
       const prevIndex = Math.max(0, currentIndex.value - 1);
       const targetOffset = -prevIndex * size + offsetAdjust;
 
-      const finalOffset = prevIndex ? targetOffset : 0; //block user from scrolling past the first item
-
       if (animated) {
-        handlerOffset.value = scrollWithTiming(finalOffset);
+        handlerOffset.value = scrollWithTiming(targetOffset);
       } else {
-        handlerOffset.value = finalOffset;
-        onFinished?.();
+        handlerOffset.value = targetOffset;
+        onFinished && runOnJS(onFinished)();
       }
       currentIndex.value = prevIndex;
     },
@@ -165,33 +170,21 @@ export const useCarouselController = (
       if (typeof index !== 'number' && !index) {
         return;
       }
-      const targetIndex = Math.max(
-        0,
-        Math.min(index, getRealLastItemIndex()),
-      ); // limit 0 and last index
+      const targetIndex = Math.max(0, Math.min(index, getRealLastItemIndex())); // limit 0 and last index
       const targetOffset = -targetIndex * size + offsetAdjust;
 
       const finalOffset = targetIndex ? targetOffset : 0; //block user from scrolling past the first item
 
       if (animated) {
         currentIndex.value = targetIndex;
-        handlerOffset.value = scrollWithTiming(
-          finalOffset,
-          onFinished,
-        );
+        handlerOffset.value = scrollWithTiming(finalOffset, onFinished);
       } else {
         handlerOffset.value = finalOffset;
         currentIndex.value = targetIndex;
-        onFinished?.();
+        onFinished && runOnJS(onFinished)();
       }
     },
-    [
-      currentIndex,
-      getRealLastItemIndex,
-      handlerOffset,
-      scrollWithTiming,
-      size,
-    ],
+    [currentIndex, getRealLastItemIndex, handlerOffset, scrollWithTiming, size],
   );
 
   return {
