@@ -12,7 +12,7 @@ import {
   WithTimingAnimation,
 } from '../types';
 import { dealWithAnimation } from '../utils';
-import { INITIAL_INDEX } from '../constant';
+import { CAROUSEL_BUFFER_SIZE } from '../constant';
 
 export interface ICarouselController {
   prev: (opts?: TCarouselActionOptions) => void;
@@ -46,7 +46,6 @@ export const useCarouselController = (options: IOpts): ICarouselController => {
     scrollOffsetAdjustment,
   } = options;
 
-  const finalLoop = originalData.length > 1 ? loop : false;
   const finishedAnimtion = useSharedValue(false);
 
   const onScrollEnd = React.useCallback(() => {
@@ -59,7 +58,7 @@ export const useCarouselController = (options: IOpts): ICarouselController => {
 
   const getRealLastItemIndex = React.useCallback(() => {
     'worklet';
-    return originalData.length + INITIAL_INDEX;
+    return originalData.length + CAROUSEL_BUFFER_SIZE;
   }, [originalData]);
 
   const scrollWithTiming = React.useCallback(
@@ -90,20 +89,23 @@ export const useCarouselController = (options: IOpts): ICarouselController => {
 
   useAnimatedReaction(
     () => {
-      return { finished: finishedAnimtion.value, index: currentIndex.value };
+      return {
+        finished: finishedAnimtion.value,
+        index: currentIndex.value,
+      };
     },
     ({ finished, index }) => {
-      if (finalLoop && finished) {
+      if (loop && finished) {
         if (index >= getRealLastItemIndex()) {
-          currentIndex.value = INITIAL_INDEX;
-          handlerOffset.value = -size * INITIAL_INDEX;
+          currentIndex.value = CAROUSEL_BUFFER_SIZE;
+          handlerOffset.value = -size * CAROUSEL_BUFFER_SIZE;
         } else if (index <= 1) {
           currentIndex.value = getRealLastItemIndex() - 1;
           handlerOffset.value = -size * (getRealLastItemIndex() - 1);
         }
       }
     },
-    [finalLoop],
+    [loop],
   );
 
   const next = React.useCallback(
@@ -117,7 +119,7 @@ export const useCarouselController = (options: IOpts): ICarouselController => {
       } = otps;
       !isDragging && runOnJS(onScrollStart)?.();
 
-      const nextIndex = finalLoop
+      const nextIndex = loop
         ? currentIndex.value + 1
         : (currentIndex.value + 1) % originalData.length;
 

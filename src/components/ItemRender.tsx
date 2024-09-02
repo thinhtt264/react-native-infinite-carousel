@@ -1,10 +1,7 @@
 import { StyleProp, View, ViewStyle } from 'react-native';
 import React from 'react';
 import { CarouselRenderItem } from '../types';
-import {
-  SharedValue,
-  useDerivedValue,
-} from 'react-native-reanimated';
+import { SharedValue, useDerivedValue } from 'react-native-reanimated';
 
 type Props = {
   data: Array<any>;

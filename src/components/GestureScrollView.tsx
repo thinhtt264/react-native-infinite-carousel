@@ -15,7 +15,6 @@ interface Props {
   transitionX: SharedValue<number>;
   currentIndex: SharedValue<number>;
   style?: StyleProp<ViewStyle>;
-  loop?: boolean;
   onScrollStart: () => void;
   onScrollEnd: () => void;
   onTouchBegin: () => void;

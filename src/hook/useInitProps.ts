@@ -22,11 +22,11 @@ export function useInitProps(props: TCarouselProps): TInitializeCarouselProps {
     velocityThreshold = 16,
     scrollOffsetAdjustment = 0,
   } = props;
-  const isFullSize = size >= SCREEN_WIDTH;
+  const finalLoop = loop && originalData.length > 1;
 
   const data = React.useMemo(() => {
-    return loop ? rotateAndDuplicate(originalData, isFullSize) : originalData;
-  }, [isFullSize, loop, originalData]);
+    return loop ? rotateAndDuplicate(originalData) : originalData;
+  }, [loop, originalData]);
 
   return {
     ...props,
@@ -34,10 +34,11 @@ export function useInitProps(props: TCarouselProps): TInitializeCarouselProps {
     size,
     originalData,
     dataLength: data.length,
-    autoPlay,
+    autoPlay: finalLoop && autoPlay,
     autoPlayInterval,
     autoPlayReverse,
     velocityThreshold,
     scrollOffsetAdjustment,
+    loop: finalLoop,
   };
 }

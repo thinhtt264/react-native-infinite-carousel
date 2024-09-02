@@ -10,9 +10,9 @@ import {
   useCarouselController,
   useInitProps,
   useOnProgressChange,
+  useSyncInitWithData,
 } from '../hook';
 import { CTX } from '../store';
-import { INITIAL_INDEX } from '../constant';
 
 const Carousel = React.forwardRef<ICarouselInstance, TCarouselProps>(
   (_props, ref) => {
@@ -29,10 +29,19 @@ const Carousel = React.forwardRef<ICarouselInstance, TCarouselProps>(
       onScrollStart,
       scrollOffsetAdjustment,
       onProgressChange,
+      originalData,
     } = props;
 
-    const scrollX = useSharedValue(-size * INITIAL_INDEX);
-    const currentIndex = useSharedValue(INITIAL_INDEX);
+    const scrollX = useSharedValue(0);
+    const currentIndex = useSharedValue(0);
+
+    useSyncInitWithData({
+      originalData,
+      data,
+      scrollX,
+      currentIndex,
+      size,
+    });
 
     const carouselController = useCarouselController({
       duration: scrollAnimationDuration,
@@ -52,6 +61,7 @@ const Carousel = React.forwardRef<ICarouselInstance, TCarouselProps>(
       offsetX: scrollX,
       size,
       onProgressChange,
+      loop,
     });
 
     React.useImperativeHandle(
@@ -103,7 +113,6 @@ const Carousel = React.forwardRef<ICarouselInstance, TCarouselProps>(
             transitionX={scrollX}
             currentIndex={currentIndex}
             carouselController={carouselController}
-            loop={loop}
             style={styles.container}
             onScrollStart={scrollViewGestureOnScrollStart}
             onScrollEnd={scrollViewGestureOnScrollEnd}
