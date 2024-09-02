@@ -63,8 +63,6 @@ const list = ['#59B4C3', '#40A2E3', '#FDBF60', '#EFF396', '#9F70FD', '#74E291'];
 
 const CarouselMemo = React.memo(
   () => {
-    console.log('render cả memo');
-
     return (
       <Carousel
         data={list}
