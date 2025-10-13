@@ -47,7 +47,7 @@ const Carousel = React.forwardRef<ICarouselInstance, TCarouselProps>(
       duration: scrollAnimationDuration,
       handlerOffset: scrollX,
       currentIndex,
-      originalData: _props.data,
+      originalData,
       size,
       loop,
       scrollOffsetAdjustment,

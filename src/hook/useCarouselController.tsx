@@ -59,7 +59,7 @@ export const useCarouselController = (options: IOpts): ICarouselController => {
   const getRealLastItemIndex = React.useCallback(() => {
     'worklet';
     return originalData.length + CAROUSEL_BUFFER_SIZE;
-  }, [originalData]);
+  }, [originalData.length]);
 
   const scrollWithTiming = React.useCallback(
     (toValue: number, onFinished?: () => void) => {
@@ -105,7 +105,7 @@ export const useCarouselController = (options: IOpts): ICarouselController => {
         }
       }
     },
-    [loop],
+    [loop, originalData.length],
   );
 
   const next = React.useCallback(
