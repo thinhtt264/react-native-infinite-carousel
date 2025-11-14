@@ -12,20 +12,22 @@ import Animated, {
   interpolate,
   SharedValue,
   useAnimatedStyle,
+  useDerivedValue,
+  useSharedValue,
 } from 'react-native-reanimated';
+import { CarouselRenderItemInfo } from './src/types';
+import CarouselLine from './CarouselLine';
 
 const CARD_WIDTH = 360;
 
+interface RenderItemProps {
+  item: string;
+  index: number;
+  animationValue: SharedValue<number>;
+}
+
 const RenderItem = React.memo(
-  ({
-    item,
-    animationValue: scrollX,
-    index,
-  }: {
-    item: string;
-    index: number;
-    animationValue: SharedValue<number>;
-  }) => {
+  ({ item, index, animationValue: scrollX }: RenderItemProps) => {
     const animStyleBanner = useAnimatedStyle(() => {
       const inputRange = [
         (index - 1) * CARD_WIDTH,
@@ -56,34 +58,43 @@ const RenderItem = React.memo(
       />
     );
   },
-  () => true,
 );
 
 const list = ['#59B4C3', '#40A2E3', '#FDBF60', '#EFF396', '#9F70FD', '#74E291'];
 
-const CarouselMemo = React.memo(
-  () => {
-    return (
-      <Carousel
-        data={list}
-        renderItem={({ item, index, animationValue }) => (
-          <RenderItem
-            item={item}
-            index={index}
-            animationValue={animationValue}
-          />
-        )}
-        itemSize={CARD_WIDTH}
-        loop
-        autoPlay
-        autoPlayInterval={1500}
-      />
-    );
-  },
-  () => true,
-);
+const CarouselComponent = () => {
+  const scrollX = useSharedValue(0);
+
+  const currentIndex = useDerivedValue(() => {
+    return scrollX.value / CARD_WIDTH;
+  }, [scrollX]);
+
+  const renderItem = React.useCallback(
+    ({ item, index, animationValue }: CarouselRenderItemInfo<string>) => (
+      <RenderItem item={item} index={index} animationValue={animationValue} />
+    ),
+    [],
+  );
+
+  return (
+    <Carousel
+      data={list}
+      renderItem={renderItem}
+      itemSize={CARD_WIDTH}
+      loop
+      onProgressChange={scrollX}
+      renderFooter={() => (
+        <CarouselLine total={list.length} valueAnim={currentIndex} />
+      )}
+      // autoPlay
+      // autoPlayInterval={3000}
+    />
+  );
+};
+
 function App(): React.JSX.Element {
   const [state, setstate] = React.useState(true);
+
   return (
     <View style={{ flex: 1, marginHorizontal: 16 }}>
       <Text
@@ -93,9 +104,11 @@ function App(): React.JSX.Element {
           textAlign: 'center',
         }}
         onPress={() => setstate(prev => !prev)}>
-        {'Text state: ' + state.valueOf()}
+        {'Forced re-render: ' + state.valueOf()}
       </Text>
-      <CarouselMemo />
+      <View style={styles.wrapper}>
+        <CarouselComponent />
+      </View>
     </View>
   );
 }
@@ -103,6 +116,11 @@ function App(): React.JSX.Element {
 export default App;
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+    // borderWidth: 2,
+    gap: 10,
+  },
   box: {
     width: CARD_WIDTH,
     height: 200,

@@ -53,6 +53,11 @@ export interface TCarouselProps<T = any> {
   onProgressChange?:
     | ((offsetProgress: number, index: number) => void)
     | SharedValue<number>;
+
+  /**
+   * Renders footer component at the below of carousel
+   */
+  renderFooter?: () => React.ReactElement | null;
 }
 
 export interface ICarouselInstance {

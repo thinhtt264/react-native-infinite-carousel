@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import React from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import GestureScrollView from './GestureScrollView';
@@ -30,6 +30,7 @@ const Carousel = React.forwardRef<ICarouselInstance, TCarouselProps>(
       scrollOffsetAdjustment,
       onProgressChange,
       originalData,
+      renderFooter,
     } = props;
 
     const scrollX = useSharedValue(0);
@@ -109,24 +110,27 @@ const Carousel = React.forwardRef<ICarouselInstance, TCarouselProps>(
     return (
       <GestureHandlerRootView>
         <CTX.Provider value={{ props }}>
-          <GestureScrollView
-            transitionX={scrollX}
-            currentIndex={currentIndex}
-            carouselController={carouselController}
-            style={styles.container}
-            onScrollStart={scrollViewGestureOnScrollStart}
-            onScrollEnd={scrollViewGestureOnScrollEnd}
-            onTouchBegin={scrollViewGestureOnTouchBegin}
-            onTouchEnd={scrollViewGestureOnTouchEnd}>
-            <ItemRender
-              data={data}
-              renderItem={renderItem}
-              offsetX={scrollX}
-              itemStyle={{
-                width: size,
-              }}
-            />
-          </GestureScrollView>
+          <View style={styles.wrapper}>
+            <GestureScrollView
+              transitionX={scrollX}
+              currentIndex={currentIndex}
+              carouselController={carouselController}
+              style={styles.container}
+              onScrollStart={scrollViewGestureOnScrollStart}
+              onScrollEnd={scrollViewGestureOnScrollEnd}
+              onTouchBegin={scrollViewGestureOnTouchBegin}
+              onTouchEnd={scrollViewGestureOnTouchEnd}>
+              <ItemRender
+                data={data}
+                renderItem={renderItem}
+                offsetX={scrollX}
+                itemStyle={{
+                  width: size,
+                }}
+              />
+            </GestureScrollView>
+            {renderFooter && renderFooter()}
+          </View>
         </CTX.Provider>
       </GestureHandlerRootView>
     );
@@ -138,6 +142,9 @@ export default Carousel as <T>(
 ) => React.ReactElement;
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flexDirection: 'column',
+  },
   container: {
     flexDirection: 'row',
   },
