@@ -51,16 +51,12 @@ const GestureScrollView = (props: Props) => {
       const nextX =
         currentIndex.value * -size + translationX + scrollOffsetAdjustment;
 
-      const maxOffsetX = (dataLength - 1) * size;
-
-      // // Block user from scrolling past the first item
-
-      if (nextX > 0) {
+      if (nextX > scrollOffsetAdjustment) {
         return;
       }
 
-      // Block user from scrolling past the last item
-      if (nextX < -maxOffsetX) {
+      const minX = -(dataLength - 1) * size + scrollOffsetAdjustment;
+      if (nextX < minX) {
         return;
       }
 

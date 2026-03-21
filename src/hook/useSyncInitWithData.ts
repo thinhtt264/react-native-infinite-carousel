@@ -8,9 +8,17 @@ interface IProps {
   scrollX: SharedValue<number>;
   currentIndex: SharedValue<number>;
   size: number;
+  scrollOffsetAdjustment?: number;
 }
 export function useSyncInitWithData(props: IProps) {
-  const { originalData, data, scrollX, currentIndex, size } = props;
+  const {
+    originalData,
+    data,
+    scrollX,
+    currentIndex,
+    size,
+    scrollOffsetAdjustment = 0,
+  } = props;
   useAnimatedReaction(
     () => {
       return {
@@ -21,7 +29,7 @@ export function useSyncInitWithData(props: IProps) {
     ({ original, updated }) => {
       const totalLength = original.length + CAROUSEL_BUFFER_SIZE * 2;
       if (original.length === 1) {
-        scrollX.value = 0;
+        scrollX.value = scrollOffsetAdjustment;
         currentIndex.value = 0;
       } else if (updated.length === totalLength) {
         const initOffest = -size * CAROUSEL_BUFFER_SIZE;
@@ -29,5 +37,6 @@ export function useSyncInitWithData(props: IProps) {
         currentIndex.value = CAROUSEL_BUFFER_SIZE;
       }
     },
+    [scrollOffsetAdjustment, size],
   );
 }

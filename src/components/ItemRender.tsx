@@ -1,7 +1,7 @@
 import { StyleProp, View, ViewStyle } from 'react-native';
 import React from 'react';
 import { CarouselRenderItem } from '../types';
-import { SharedValue, useDerivedValue } from 'react-native-reanimated';
+import { SharedValue } from 'react-native-reanimated';
 
 type Props = {
   data: Array<any>;
@@ -12,11 +12,6 @@ type Props = {
 
 const ItemRender = (props: Props) => {
   const { data, renderItem, offsetX, itemStyle = {} } = props;
-  // caculating new value from offetX
-  const animationValue = useDerivedValue(
-    () => Math.abs(offsetX.value),
-    [offsetX],
-  );
 
   return (
     <>
@@ -26,7 +21,7 @@ const ItemRender = (props: Props) => {
             {renderItem({
               item,
               index,
-              animationValue,
+              animationValue: offsetX,
             })}
           </View>
         );

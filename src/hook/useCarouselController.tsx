@@ -134,7 +134,13 @@ export const useCarouselController = (options: IOpts): ICarouselController => {
 
       currentIndex.value = nextIndex;
     },
-    [currentIndex, handlerOffset, scrollWithTiming, size],
+    [
+      currentIndex,
+      handlerOffset,
+      scrollWithTiming,
+      size,
+      scrollOffsetAdjustment,
+    ],
   );
 
   const prev = React.useCallback(
@@ -145,7 +151,12 @@ export const useCarouselController = (options: IOpts): ICarouselController => {
         offsetAdjust = scrollOffsetAdjustment,
         onFinished,
       } = opts;
-      if (currentIndex.value === 0 && handlerOffset.value >= 0) return;
+      if (
+        currentIndex.value === 0 &&
+        handlerOffset.value >= scrollOffsetAdjustment
+      ) {
+        return;
+      }
       const prevIndex = Math.max(0, currentIndex.value - 1);
       const targetOffset = -prevIndex * size + offsetAdjust;
 
@@ -157,7 +168,13 @@ export const useCarouselController = (options: IOpts): ICarouselController => {
       }
       currentIndex.value = prevIndex;
     },
-    [currentIndex, handlerOffset, scrollWithTiming, size],
+    [
+      currentIndex,
+      handlerOffset,
+      scrollWithTiming,
+      size,
+      scrollOffsetAdjustment,
+    ],
   );
 
   const scrollTo = React.useCallback(
@@ -174,8 +191,7 @@ export const useCarouselController = (options: IOpts): ICarouselController => {
       }
       const targetIndex = Math.max(0, Math.min(index, getRealLastItemIndex())); // limit 0 and last index
       const targetOffset = -targetIndex * size + offsetAdjust;
-
-      const finalOffset = targetIndex ? targetOffset : 0; //block user from scrolling past the first item
+      const finalOffset = targetOffset;
 
       if (animated) {
         currentIndex.value = targetIndex;
@@ -186,7 +202,14 @@ export const useCarouselController = (options: IOpts): ICarouselController => {
         onFinished && runOnJS(onFinished)();
       }
     },
-    [currentIndex, getRealLastItemIndex, handlerOffset, scrollWithTiming, size],
+    [
+      currentIndex,
+      getRealLastItemIndex,
+      handlerOffset,
+      scrollWithTiming,
+      size,
+      scrollOffsetAdjustment,
+    ],
   );
 
   return {

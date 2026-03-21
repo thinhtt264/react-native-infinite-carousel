@@ -9,6 +9,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Carousel from './src';
 import Animated, {
+  Extrapolation,
   interpolate,
   SharedValue,
   useAnimatedStyle,
@@ -17,40 +18,49 @@ import Animated, {
 } from 'react-native-reanimated';
 import { CarouselRenderItemInfo } from './src/types';
 import CarouselLine from './CarouselLine';
+import { SCREEN_WIDTH } from './src/constant';
 
-const CARD_WIDTH = 360;
+/** Card width — smaller than viewport so side cards peek in. */
+const CARD_WIDTH = 272;
+/** Matches `marginHorizontal: 16` on the root screen. */
+const HORIZONTAL_INSET = 32;
+const VIEWPORT_WIDTH = SCREEN_WIDTH - HORIZONTAL_INSET;
+const SCROLL_OFFSET_ADJUSTMENT = (VIEWPORT_WIDTH - CARD_WIDTH) / 2;
 
 interface RenderItemProps {
   item: string;
   index: number;
   animationValue: SharedValue<number>;
+  scrollAdjust: number;
 }
 
 const RenderItem = React.memo(
-  ({ item, index, animationValue: scrollX }: RenderItemProps) => {
+  ({ item, index, animationValue: offsetX, scrollAdjust }: RenderItemProps) => {
     const animStyleBanner = useAnimatedStyle(() => {
+      const scrollProgress = Math.abs(offsetX.value - scrollAdjust);
       const inputRange = [
         (index - 1) * CARD_WIDTH,
         index * CARD_WIDTH,
         (index + 1) * CARD_WIDTH,
       ];
       const scale = interpolate(
-        Math.abs(scrollX.value),
+        scrollProgress,
         inputRange,
-        [0.8, 1, 0.8],
+        [0.86, 1, 0.86],
+        Extrapolation.CLAMP,
       );
 
       const translateX = interpolate(
-        Math.abs(scrollX.value),
+        scrollProgress,
         inputRange,
-        [-32, 0, 32],
+        [-14, 0, 14],
+        Extrapolation.CLAMP,
       );
 
-      const transFormX = {
+      return {
         transform: [{ scale }, { translateX }],
       };
-      return transFormX;
-    }, [scrollX.value]);
+    });
 
     return (
       <Animated.View
@@ -71,7 +81,12 @@ const CarouselComponent = () => {
 
   const renderItem = React.useCallback(
     ({ item, index, animationValue }: CarouselRenderItemInfo<string>) => (
-      <RenderItem item={item} index={index} animationValue={animationValue} />
+      <RenderItem
+        item={item}
+        index={index}
+        animationValue={animationValue}
+        scrollAdjust={SCROLL_OFFSET_ADJUSTMENT}
+      />
     ),
     [],
   );
@@ -81,7 +96,8 @@ const CarouselComponent = () => {
       data={list}
       renderItem={renderItem}
       itemSize={CARD_WIDTH}
-      loop
+      loop={false}
+      scrollOffsetAdjustment={SCROLL_OFFSET_ADJUSTMENT}
       onProgressChange={scrollX}
       renderFooter={() => (
         <CarouselLine total={list.length} valueAnim={currentIndex} />
@@ -123,6 +139,8 @@ const styles = StyleSheet.create({
   },
   box: {
     width: CARD_WIDTH,
-    height: 200,
+    height: 340,
+    alignSelf: 'center',
+    borderRadius: 16,
   },
 });

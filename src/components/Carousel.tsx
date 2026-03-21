@@ -13,6 +13,7 @@ import {
   useSyncInitWithData,
 } from '../hook';
 import { CTX } from '../store';
+import { CAROUSEL_BUFFER_SIZE } from '../constant';
 
 const Carousel = React.forwardRef<ICarouselInstance, TCarouselProps>(
   (_props, ref) => {
@@ -33,8 +34,10 @@ const Carousel = React.forwardRef<ICarouselInstance, TCarouselProps>(
       renderFooter,
     } = props;
 
-    const scrollX = useSharedValue(0);
-    const currentIndex = useSharedValue(0);
+    const scrollX = useSharedValue(
+      loop ? -size * CAROUSEL_BUFFER_SIZE : scrollOffsetAdjustment,
+    );
+    const currentIndex = useSharedValue(loop ? CAROUSEL_BUFFER_SIZE : 0);
 
     useSyncInitWithData({
       originalData,
@@ -42,6 +45,7 @@ const Carousel = React.forwardRef<ICarouselInstance, TCarouselProps>(
       scrollX,
       currentIndex,
       size,
+      scrollOffsetAdjustment,
     });
 
     const carouselController = useCarouselController({
@@ -63,6 +67,7 @@ const Carousel = React.forwardRef<ICarouselInstance, TCarouselProps>(
       size,
       onProgressChange,
       loop,
+      scrollOffsetAdjustment,
     });
 
     React.useImperativeHandle(
