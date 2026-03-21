@@ -3,3 +3,7 @@ export { useAutoPlay } from './useAutoPlay';
 export { useCarouselController } from './useCarouselController';
 export { useOnProgressChange } from './useOnProgressChange';
 export { useSyncInitWithData } from './useSyncInitWithData';
+export {
+  buildResolvedCarouselProps,
+  useCarouselViewportMeasure,
+} from './useCarouselResponsiveLayout';

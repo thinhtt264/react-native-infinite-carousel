@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Carousel from './src';
 import Animated, {
   Extrapolation,
@@ -18,13 +18,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { CarouselRenderItemInfo } from './src/types';
 import CarouselLine from './CarouselLine';
-import { SCREEN_WIDTH } from './src/constant';
-
 const CARD_WIDTH = 240;
-/** Matches `marginHorizontal: 16` on the root screen. */
-const HORIZONTAL_INSET = 32;
-const VIEWPORT_WIDTH = SCREEN_WIDTH - HORIZONTAL_INSET;
-const SCROLL_OFFSET_ADJUSTMENT = (VIEWPORT_WIDTH - CARD_WIDTH) / 2;
 
 interface RenderItemProps {
   item: string;
@@ -79,12 +73,17 @@ const CarouselComponent = () => {
   }, [scrollX]);
 
   const renderItem = React.useCallback(
-    ({ item, index, animationValue }: CarouselRenderItemInfo<string>) => (
+    ({
+      item,
+      index,
+      animationValue,
+      scrollOffsetAdjustment: adj,
+    }: CarouselRenderItemInfo<string>) => (
       <RenderItem
         item={item}
         index={index}
         animationValue={animationValue}
-        scrollAdjust={SCROLL_OFFSET_ADJUSTMENT}
+        scrollAdjust={adj}
       />
     ),
     [],
@@ -95,8 +94,7 @@ const CarouselComponent = () => {
       data={list}
       renderItem={renderItem}
       itemSize={CARD_WIDTH}
-      loop={false}
-      scrollOffsetAdjustment={SCROLL_OFFSET_ADJUSTMENT}
+      loop={true}
       onProgressChange={scrollX}
       renderFooter={() => (
         <CarouselLine total={list.length} valueAnim={currentIndex} />
@@ -108,22 +106,9 @@ const CarouselComponent = () => {
 };
 
 function App(): React.JSX.Element {
-  const [state, setstate] = React.useState(true);
-
   return (
-    <View style={{ flex: 1, marginHorizontal: 16 }}>
-      <Text
-        style={{
-          fontSize: 50,
-          marginVertical: 100,
-          textAlign: 'center',
-        }}
-        onPress={() => setstate(prev => !prev)}>
-        {'Forced re-render: ' + state.valueOf()}
-      </Text>
-      <View style={styles.wrapper}>
-        <CarouselComponent />
-      </View>
+    <View style={{ flex: 1, marginHorizontal: 16, justifyContent: 'center' }}>
+      <CarouselComponent />
     </View>
   );
 }
@@ -131,11 +116,6 @@ function App(): React.JSX.Element {
 export default App;
 
 const styles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-    // borderWidth: 2,
-    gap: 10,
-  },
   box: {
     width: CARD_WIDTH,
     height: 340,

@@ -6,8 +6,10 @@ import { ICarouselInstance, TCarouselProps } from '../types';
 import ItemRender from './ItemRender';
 import { runOnJS, useSharedValue } from 'react-native-reanimated';
 import {
+  buildResolvedCarouselProps,
   useAutoPlay,
   useCarouselController,
+  useCarouselViewportMeasure,
   useInitProps,
   useOnProgressChange,
   useSyncInitWithData,
@@ -15,9 +17,13 @@ import {
 import { CTX } from '../store';
 import { CAROUSEL_BUFFER_SIZE } from '../constant';
 
-const Carousel = React.forwardRef<ICarouselInstance, TCarouselProps>(
-  (_props, ref) => {
-    const props = useInitProps(_props);
+type CarouselInnerProps = TCarouselProps & { viewportWidth: number };
+
+const CarouselInner = React.forwardRef<ICarouselInstance, CarouselInnerProps>(
+  ({ viewportWidth, ...rawProps }, ref) => {
+    const props = useInitProps(
+      buildResolvedCarouselProps(rawProps, viewportWidth),
+    );
     const {
       data,
       renderItem,
@@ -92,7 +98,6 @@ const Carousel = React.forwardRef<ICarouselInstance, TCarouselProps>(
     );
 
     const onScrollCarouselEnd = React.useCallback(() => {
-      //callback 2 times, 1st time is animation end, 2nd time is pangesture end
       if (onScrollEnd) {
         onScrollEnd(currentIndex.value);
       }
@@ -117,30 +122,47 @@ const Carousel = React.forwardRef<ICarouselInstance, TCarouselProps>(
     ]);
 
     return (
+      <CTX.Provider value={{ props }}>
+        <GestureScrollView
+          transitionX={scrollX}
+          currentIndex={currentIndex}
+          carouselController={carouselController}
+          style={styles.container}
+          onScrollStart={scrollViewGestureOnScrollStart}
+          onScrollEnd={scrollViewGestureOnScrollEnd}
+          onTouchBegin={scrollViewGestureOnTouchBegin}
+          onTouchEnd={scrollViewGestureOnTouchEnd}>
+          <ItemRender
+            data={data}
+            renderItem={renderItem}
+            offsetX={scrollX}
+            scrollOffsetAdjustment={scrollOffsetAdjustment}
+            itemStyle={{
+              width: size,
+            }}
+          />
+        </GestureScrollView>
+        {renderFooter && renderFooter()}
+      </CTX.Provider>
+    );
+  },
+);
+
+const Carousel = React.forwardRef<ICarouselInstance, TCarouselProps>(
+  (_props, ref) => {
+    const { layoutWidth, onViewportLayout, wrapperRef } =
+      useCarouselViewportMeasure();
+
+    return (
       <GestureHandlerRootView style={styles.gestureRoot}>
-        <CTX.Provider value={{ props }}>
-          <View style={styles.wrapper}>
-            <GestureScrollView
-              transitionX={scrollX}
-              currentIndex={currentIndex}
-              carouselController={carouselController}
-              style={styles.container}
-              onScrollStart={scrollViewGestureOnScrollStart}
-              onScrollEnd={scrollViewGestureOnScrollEnd}
-              onTouchBegin={scrollViewGestureOnTouchBegin}
-              onTouchEnd={scrollViewGestureOnTouchEnd}>
-              <ItemRender
-                data={data}
-                renderItem={renderItem}
-                offsetX={scrollX}
-                itemStyle={{
-                  width: size,
-                }}
-              />
-            </GestureScrollView>
-            {renderFooter && renderFooter()}
-          </View>
-        </CTX.Provider>
+        <View
+          ref={wrapperRef}
+          style={styles.wrapper}
+          onLayout={onViewportLayout}>
+          {layoutWidth > 0 ? (
+            <CarouselInner ref={ref} {..._props} viewportWidth={layoutWidth} />
+          ) : null}
+        </View>
       </GestureHandlerRootView>
     );
   },
@@ -156,6 +178,7 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     flexDirection: 'column',
+    width: '100%',
   },
   container: {
     flexDirection: 'row',

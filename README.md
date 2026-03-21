@@ -11,8 +11,8 @@ https://github.com/user-attachments/assets/1800213c-7db3-429d-94c6-6f22324fd701
 | Property | Type | Required | Default | Description |
 |----------|------|----------|---------|-------------|
 | `data` | `Array<T>` | ✅ Yes | - | Data array to display in carousel |
-| `renderItem` | `(info: CarouselRenderItemInfo<T>) => React.ReactElement` | ✅ Yes | - | Function to render each item with `item`, `index`, and `animationValue` |
-| `itemSize` | `number` | ❌ No | `SCREEN_WIDTH` | Width of each carousel item |
+| `renderItem` | `(info: CarouselRenderItemInfo<T>) => React.ReactElement` | ✅ Yes | - | Renders each slide; `info` includes `scrollOffsetAdjustment` (same as the carousel uses) for parallax / scale math |
+| `itemSize` | `number` | ❌ No | `SCREEN_WIDTH` | Slide slot width. Omit for full-width slides. The carousel uses the container’s **onLayout** width (not the window) so centering and item width match the real viewport. |
 | `width` | `number` | ❌ No | - | Carousel container width |
 | `height` | `number` | ❌ No | - | Carousel container height |
 | `autoPlay` | `boolean` | ❌ No | `false` | Enable automatic slide transition (requires `loop` and >1 item) |
@@ -22,7 +22,7 @@ https://github.com/user-attachments/assets/1800213c-7db3-429d-94c6-6f22324fd701
 | `onScrollStart` | `() => void` | ❌ No | - | Callback when scrolling starts |
 | `onScrollEnd` | `(index: number) => void` | ❌ No | - | Callback when scrolling ends with current index |
 | `velocityThreshold` | `number` | ❌ No | `16` | Velocity threshold for snap to next slide on fast swipe |
-| `scrollOffsetAdjustment` | `number` | ❌ No | `0` | Offset adjustment for scroll positioning |
+| `scrollOffsetAdjustment` | `number` | ❌ No | `0` | Scroll offset tweak. With a fixed `itemSize`, defaults to centering in the measured viewport unless you set this explicitly. |
 | `onProgressChange` | `((offsetProgress: number, index: number) => void) \| SharedValue<number>` | ❌ No | - | Track scroll progress via callback or SharedValue |
 | `renderFooter` | `() => React.ReactElement \| null` | ❌ No | - | Render footer component below carousel |
 | `ref` | `React.Ref<ICarouselInstance>` | ❌ No | - | Ref to access carousel control methods |

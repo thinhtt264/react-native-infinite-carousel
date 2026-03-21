@@ -73,8 +73,9 @@ const GestureScrollView = (props: Props) => {
       const draggedDistance = translationX;
 
       const shouldChangeIndex =
-        Math.abs(draggedDistance) > size / 2.5 ||
-        Math.abs(velocityX) > velocityThreshold;
+        Math.abs(translationX) > size / 2.5 ||
+        (Math.abs(translationX) > MIN_DISTANCE &&
+          Math.abs(velocityX) > velocityThreshold);
 
       const canGoNext =
         currentIndex.value + 1 < dataLength ||

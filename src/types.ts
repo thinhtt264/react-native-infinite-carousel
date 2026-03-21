@@ -86,6 +86,8 @@ export interface CarouselRenderItemInfo<ItemT> {
   item: ItemT;
   index: number;
   animationValue: SharedValue<number>;
+  /** Same value the carousel uses for `scrollOffsetAdjustment` (e.g. for parallax math). */
+  scrollOffsetAdjustment: number;
 }
 
 export type CarouselRenderItem<ItemT> = (

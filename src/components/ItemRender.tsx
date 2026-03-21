@@ -7,11 +7,18 @@ type Props = {
   data: Array<any>;
   renderItem: CarouselRenderItem<any>;
   offsetX: SharedValue<number>;
+  scrollOffsetAdjustment: number;
   itemStyle?: StyleProp<ViewStyle>;
 };
 
 const ItemRender = (props: Props) => {
-  const { data, renderItem, offsetX, itemStyle = {} } = props;
+  const {
+    data,
+    renderItem,
+    offsetX,
+    scrollOffsetAdjustment,
+    itemStyle = {},
+  } = props;
 
   return (
     <>
@@ -22,6 +29,7 @@ const ItemRender = (props: Props) => {
               item,
               index,
               animationValue: offsetX,
+              scrollOffsetAdjustment,
             })}
           </View>
         );
