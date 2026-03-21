@@ -35,7 +35,9 @@ const Carousel = React.forwardRef<ICarouselInstance, TCarouselProps>(
     } = props;
 
     const scrollX = useSharedValue(
-      loop ? -size * CAROUSEL_BUFFER_SIZE : scrollOffsetAdjustment,
+      loop
+        ? -size * CAROUSEL_BUFFER_SIZE + scrollOffsetAdjustment
+        : scrollOffsetAdjustment,
     );
     const currentIndex = useSharedValue(loop ? CAROUSEL_BUFFER_SIZE : 0);
 
@@ -70,6 +72,12 @@ const Carousel = React.forwardRef<ICarouselInstance, TCarouselProps>(
       scrollOffsetAdjustment,
     });
 
+    const { start: startAutoPlay, pause: pauseAutoPlay } = useAutoPlay({
+      autoPlay,
+      autoPlayInterval,
+      carouselController,
+    });
+
     React.useImperativeHandle(
       ref,
       () => ({
@@ -80,18 +88,14 @@ const Carousel = React.forwardRef<ICarouselInstance, TCarouselProps>(
         pauseAutoPlay,
         getCurrentIndex: () => currentIndex.value,
       }),
-      [currentIndex.value, next, prev, scrollTo],
+      [currentIndex.value, next, pauseAutoPlay, prev, progressValue, scrollTo],
     );
-
-    const { start: startAutoPlay, pause: pauseAutoPlay } = useAutoPlay({
-      autoPlay,
-      autoPlayInterval,
-      carouselController,
-    });
 
     const onScrollCarouselEnd = React.useCallback(() => {
       //callback 2 times, 1st time is animation end, 2nd time is pangesture end
-      if (onScrollEnd) onScrollEnd(currentIndex.value);
+      if (onScrollEnd) {
+        onScrollEnd(currentIndex.value);
+      }
     }, [currentIndex.value, onScrollEnd]);
 
     const scrollViewGestureOnScrollStart = React.useCallback(() => {
@@ -113,7 +117,7 @@ const Carousel = React.forwardRef<ICarouselInstance, TCarouselProps>(
     ]);
 
     return (
-      <GestureHandlerRootView>
+      <GestureHandlerRootView style={styles.gestureRoot}>
         <CTX.Provider value={{ props }}>
           <View style={styles.wrapper}>
             <GestureScrollView
@@ -147,6 +151,9 @@ export default Carousel as <T>(
 ) => React.ReactElement;
 
 const styles = StyleSheet.create({
+  gestureRoot: {
+    width: '100%',
+  },
   wrapper: {
     flexDirection: 'column',
   },

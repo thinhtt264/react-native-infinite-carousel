@@ -24,7 +24,13 @@ interface Props {
 
 const GestureScrollView = (props: Props) => {
   const {
-    props: { dataLength, size, velocityThreshold, scrollOffsetAdjustment },
+    props: {
+      dataLength,
+      size,
+      velocityThreshold,
+      scrollOffsetAdjustment,
+      loop,
+    },
   } = React.useContext(CTX);
 
   const {
@@ -70,10 +76,12 @@ const GestureScrollView = (props: Props) => {
         Math.abs(draggedDistance) > size / 2.5 ||
         Math.abs(velocityX) > velocityThreshold;
 
-      const isLastIndex = currentIndex.value + 1 < dataLength;
+      const canGoNext =
+        currentIndex.value + 1 < dataLength ||
+        !!(loop && currentIndex.value === dataLength - 1);
 
       if (shouldChangeIndex) {
-        if (draggedDistance < 0 && isLastIndex) {
+        if (draggedDistance < 0 && canGoNext) {
           scrollNext({ isDragging: true });
         } else if (draggedDistance > 0) {
           scrollPrev();

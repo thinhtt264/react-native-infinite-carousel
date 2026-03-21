@@ -27,14 +27,12 @@ export function useOnProgressChange(
     currentOffset => {
       if (!onProgressChange) return;
 
-      const normalized = loop
-        ? Math.abs(currentOffset)
-        : Math.abs(currentOffset - scrollOffsetAdjustment);
+      const normalized = Math.abs(currentOffset - scrollOffsetAdjustment);
 
       const currentIndex = Math.round(normalized / size);
 
       const progressValue = loop
-        ? calculateOffsetForRealIndex(Math.abs(currentOffset), size)
+        ? calculateOffsetForRealIndex(normalized, size)
         : normalized;
 
       if (typeof onProgressChange === 'function') {

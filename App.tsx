@@ -20,8 +20,7 @@ import { CarouselRenderItemInfo } from './src/types';
 import CarouselLine from './CarouselLine';
 import { SCREEN_WIDTH } from './src/constant';
 
-/** Card width — smaller than viewport so side cards peek in. */
-const CARD_WIDTH = 272;
+const CARD_WIDTH = 240;
 /** Matches `marginHorizontal: 16` on the root screen. */
 const HORIZONTAL_INSET = 32;
 const VIEWPORT_WIDTH = SCREEN_WIDTH - HORIZONTAL_INSET;
@@ -53,7 +52,7 @@ const RenderItem = React.memo(
       const translateX = interpolate(
         scrollProgress,
         inputRange,
-        [-14, 0, 14],
+        [-4, 0, 4],
         Extrapolation.CLAMP,
       );
 

@@ -56,11 +56,6 @@ export const useCarouselController = (options: IOpts): ICarouselController => {
     options.onScrollStart?.();
   }, [options]);
 
-  const getRealLastItemIndex = React.useCallback(() => {
-    'worklet';
-    return originalData.length + CAROUSEL_BUFFER_SIZE;
-  }, [originalData.length]);
-
   const scrollWithTiming = React.useCallback(
     (toValue: number, onFinished?: () => void) => {
       'worklet';
@@ -88,24 +83,33 @@ export const useCarouselController = (options: IOpts): ICarouselController => {
   );
 
   useAnimatedReaction(
-    () => {
-      return {
-        finished: finishedAnimtion.value,
-        index: currentIndex.value,
-      };
-    },
+    () => ({
+      finished: finishedAnimtion.value,
+      index: currentIndex.value,
+    }),
     ({ finished, index }) => {
-      if (loop && finished) {
-        if (index >= getRealLastItemIndex()) {
-          currentIndex.value = CAROUSEL_BUFFER_SIZE;
-          handlerOffset.value = -size * CAROUSEL_BUFFER_SIZE;
-        } else if (index <= 1) {
-          currentIndex.value = getRealLastItemIndex() - 1;
-          handlerOffset.value = -size * (getRealLastItemIndex() - 1);
-        }
+      if (!loop || !finished) {
+        return;
+      }
+
+      const n = originalData.length;
+      const b = CAROUSEL_BUFFER_SIZE;
+      const adj = scrollOffsetAdjustment;
+
+      // Extended strip: [clone last b][N items][clone first b] → length n + 2b
+      if (index >= n + b) {
+        // Past end clones → same visual as middle strip
+        const target = index - n;
+        currentIndex.value = target;
+        handlerOffset.value = -target * size + adj;
+      } else if (index < b) {
+        // In leading clones → map to matching real item
+        const target = n + index;
+        currentIndex.value = target;
+        handlerOffset.value = -target * size + adj;
       }
     },
-    [loop, originalData.length],
+    [loop, originalData.length, size, scrollOffsetAdjustment],
   );
 
   const next = React.useCallback(
@@ -119,20 +123,31 @@ export const useCarouselController = (options: IOpts): ICarouselController => {
       } = otps;
       !isDragging && runOnJS(onScrollStart)?.();
 
-      const nextIndex = loop
-        ? currentIndex.value + 1
-        : (currentIndex.value + 1) % originalData.length;
+      let nextIndex: number;
+      let wrapFromEnd = false;
+      if (loop) {
+        const lastExtended = originalData.length + 2 * CAROUSEL_BUFFER_SIZE - 1;
+        wrapFromEnd = currentIndex.value >= lastExtended;
+        nextIndex = wrapFromEnd ? CAROUSEL_BUFFER_SIZE : currentIndex.value + 1;
+      } else {
+        nextIndex = (currentIndex.value + 1) % originalData.length;
+      }
 
       const targetOffset = -nextIndex * size + offsetAdjust;
 
-      if (animated) {
-        handlerOffset.value = scrollWithTiming(targetOffset, onFinished);
-      } else {
+      if (wrapFromEnd) {
+        currentIndex.value = nextIndex;
         handlerOffset.value = targetOffset;
         onFinished && runOnJS(onFinished)();
+        runOnJS(onScrollEnd)();
+      } else if (animated) {
+        handlerOffset.value = scrollWithTiming(targetOffset, onFinished);
+        currentIndex.value = nextIndex;
+      } else {
+        handlerOffset.value = targetOffset;
+        currentIndex.value = nextIndex;
+        onFinished && runOnJS(onFinished)();
       }
-
-      currentIndex.value = nextIndex;
     },
     [
       currentIndex,
@@ -140,6 +155,8 @@ export const useCarouselController = (options: IOpts): ICarouselController => {
       scrollWithTiming,
       size,
       scrollOffsetAdjustment,
+      loop,
+      originalData.length,
     ],
   );
 
@@ -152,21 +169,36 @@ export const useCarouselController = (options: IOpts): ICarouselController => {
         onFinished,
       } = opts;
       if (
+        !loop &&
         currentIndex.value === 0 &&
         handlerOffset.value >= scrollOffsetAdjustment
       ) {
         return;
       }
-      const prevIndex = Math.max(0, currentIndex.value - 1);
+
+      const wrapFromStart = !!(loop && currentIndex.value === 0);
+
+      let prevIndex: number;
+      if (wrapFromStart) {
+        prevIndex = CAROUSEL_BUFFER_SIZE + originalData.length - 1;
+      } else {
+        prevIndex = Math.max(0, currentIndex.value - 1);
+      }
       const targetOffset = -prevIndex * size + offsetAdjust;
 
-      if (animated) {
-        handlerOffset.value = scrollWithTiming(targetOffset);
-      } else {
+      if (wrapFromStart) {
+        currentIndex.value = prevIndex;
         handlerOffset.value = targetOffset;
         onFinished && runOnJS(onFinished)();
+        runOnJS(onScrollEnd)();
+      } else if (animated) {
+        handlerOffset.value = scrollWithTiming(targetOffset);
+        currentIndex.value = prevIndex;
+      } else {
+        handlerOffset.value = targetOffset;
+        currentIndex.value = prevIndex;
+        onFinished && runOnJS(onFinished)();
       }
-      currentIndex.value = prevIndex;
     },
     [
       currentIndex,
@@ -174,6 +206,8 @@ export const useCarouselController = (options: IOpts): ICarouselController => {
       scrollWithTiming,
       size,
       scrollOffsetAdjustment,
+      loop,
+      originalData.length,
     ],
   );
 
@@ -189,7 +223,10 @@ export const useCarouselController = (options: IOpts): ICarouselController => {
       if (typeof index !== 'number' && !index) {
         return;
       }
-      const targetIndex = Math.max(0, Math.min(index, getRealLastItemIndex())); // limit 0 and last index
+      const maxIndex = loop
+        ? originalData.length + 2 * CAROUSEL_BUFFER_SIZE - 1
+        : originalData.length - 1;
+      const targetIndex = Math.max(0, Math.min(index, maxIndex));
       const targetOffset = -targetIndex * size + offsetAdjust;
       const finalOffset = targetOffset;
 
@@ -204,11 +241,12 @@ export const useCarouselController = (options: IOpts): ICarouselController => {
     },
     [
       currentIndex,
-      getRealLastItemIndex,
       handlerOffset,
       scrollWithTiming,
       size,
       scrollOffsetAdjustment,
+      loop,
+      originalData.length,
     ],
   );
 

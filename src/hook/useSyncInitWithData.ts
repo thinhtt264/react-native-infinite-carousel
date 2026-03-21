@@ -32,8 +32,7 @@ export function useSyncInitWithData(props: IProps) {
         scrollX.value = scrollOffsetAdjustment;
         currentIndex.value = 0;
       } else if (updated.length === totalLength) {
-        const initOffest = -size * CAROUSEL_BUFFER_SIZE;
-        scrollX.value = initOffest;
+        scrollX.value = -size * CAROUSEL_BUFFER_SIZE + scrollOffsetAdjustment;
         currentIndex.value = CAROUSEL_BUFFER_SIZE;
       }
     },
