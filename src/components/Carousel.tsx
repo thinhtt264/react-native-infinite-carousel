@@ -13,6 +13,7 @@ import {
   useInitProps,
   useOnProgressChange,
   useSyncInitWithData,
+  useReduceMotion,
 } from '../hook';
 import { CTX } from '../store';
 import { CAROUSEL_BUFFER_SIZE } from '../constant';
@@ -21,9 +22,17 @@ type CarouselInnerProps = TCarouselProps & { viewportWidth: number };
 
 const CarouselInner = React.forwardRef<ICarouselInstance, CarouselInnerProps>(
   ({ viewportWidth, ...rawProps }, ref) => {
-    const props = useInitProps(
-      buildResolvedCarouselProps(rawProps, viewportWidth),
-    );
+    const reduceMotion = useReduceMotion();
+
+    const resolvedProps = buildResolvedCarouselProps(rawProps, viewportWidth);
+
+    const props = useInitProps({
+      ...resolvedProps,
+      withAnimation: reduceMotion
+        ? { type: 'timing', config: { duration: 0 } }
+        : resolvedProps.withAnimation,
+    });
+
     const {
       data,
       renderItem,

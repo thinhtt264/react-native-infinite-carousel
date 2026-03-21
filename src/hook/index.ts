@@ -7,3 +7,4 @@ export {
   buildResolvedCarouselProps,
   useCarouselViewportMeasure,
 } from './useCarouselResponsiveLayout';
+export { useReduceMotion } from './useReduceMotion';
